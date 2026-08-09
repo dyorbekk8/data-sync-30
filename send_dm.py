@@ -9,10 +9,8 @@ def load_cookies():
     if not cookies_json:
         print("X_COOKIES_JSON topilmadi!")
         return None
-    
     try:
-        cookies = json.loads(cookies_json)
-        return cookies
+        return json.loads(cookies_json)
     except:
         print("Cookie JSON formatda emas!")
         return None
@@ -20,7 +18,6 @@ def load_cookies():
 def load_messages():
     with open("messages.txt", "r", encoding="utf-8") as f:
         content = f.read().strip()
-        # 3 ta xabarni ajratib olamiz
         messages = [m.strip() for m in content.split("\n\n") if m.strip()]
         return messages
 
@@ -33,14 +30,18 @@ def load_leads():
     return leads
 
 def already_sent(username):
+    """Oldin yozilgan odamlarni tekshiradi"""
     if not os.path.exists("sent_log.txt"):
         return False
-    with open("sent_log.txt", "r") as f:
-        return username.lower() in f.read().lower()
+    with open("sent_log.txt", "r", encoding="utf-8") as f:
+        sent_users = [line.strip().lower() for line in f if line.strip()]
+    return username.lower() in sent_users
 
 def mark_as_sent(username):
-    with open("sent_log.txt", "a") as f:
+    """Yuborilgan odamni logga yozadi"""
+    with open("sent_log.txt", "a", encoding="utf-8") as f:
         f.write(username + "\n")
+    print(f"→ @{username} sent_log.txt ga qo‘shildi")
 
 def personalize(message, name):
     return message.replace("{name}", name)
@@ -57,26 +58,31 @@ def main():
     messages = load_messages()
     leads = load_leads()
     
-    # Yuborilmagan leadlarni olish
+    # Faqat oldin yozilmaganlarni olish
     pending = [l for l in leads if not already_sent(l["username"])]
     
     if not pending:
-        print("Barcha leadlar yuborilgan.")
+        print("Barcha leadlar allaqachon yozilgan. Yangi lead qo‘shing.")
         return
+    
+    print(f"Qolgan yangi leadlar: {len(pending)} ta")
     
     # Bitta random lead tanlash
     lead = random.choice(pending)
     message_template = random.choice(messages)
     final_message = personalize(message_template, lead["name"])
     
-    print(f"Tanlandi: @{lead['username']}")
+    print(f"\nTanlandi: @{lead['username']}")
+    print(f"Ism: {lead['name']}")
     print(f"Xabar:\n{final_message}")
-    print("-" * 40)
-    print("Hozircha faqat test rejimi. Haqiqiy yuborish keyin qo‘shiladi.")
+    print("-" * 50)
     
-    # Test uchun yuborilgan deb belgilaymiz
+    # Hozircha test rejimi (haqiqiy yuborish keyin qo‘shiladi)
+    print("TEST REJIMI: Haqiqiy DM yuborilmadi.")
+    
+    # Yuborilgan deb belgilash
     mark_as_sent(lead["username"])
-    print(f"@{lead['username']} yuborilganlar ro‘yxatiga qo‘shildi.")
+    print("Muvaffaqiyatli yakunlandi.")
 
 if __name__ == "__main__":
     main()
